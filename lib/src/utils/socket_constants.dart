@@ -14,4 +14,6 @@ class SC {
 
   static const USERS_MSG = "userMessage";
   static const ERROR = "error";
+
+  static const SOCKET_URL = "http://172.30.4.48:3000";
 }

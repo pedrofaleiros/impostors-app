@@ -23,6 +23,8 @@ class _HomePageState extends State<HomePage> {
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
 
+  final _passwordFocusNode = FocusNode();
+
   bool _showPassword = false;
 
   Future<void> _joinRoom() async {
@@ -106,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _icon(),
-                  _card(),
+                  _card(context),
                   SizedBox(height: 8),
                   _buttonsRow(),
                 ],
@@ -152,7 +154,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _card() {
+  Widget _card(BuildContext ctx) {
     return Card(
       elevation: 0,
       child: Padding(
@@ -168,7 +170,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 32),
-            _codeTextField(),
+            _codeTextField(ctx),
             SizedBox(height: 8),
             _passwordTextField(),
             SizedBox(height: 16),
@@ -196,17 +198,20 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _codeTextField() {
+  Widget _codeTextField(BuildContext ctx) {
     return TextField(
       inputFormatters: [LengthLimitingTextInputFormatter(4)],
+      onSubmitted: (value) {
+        FocusScope.of(ctx).requestFocus(_passwordFocusNode);
+      },
       onChanged: (value) {
         if (value.length == 4) {
           setState(() => _showPassword = true);
-          FocusScope.of(context).nextFocus();
+          FocusScope.of(ctx).requestFocus(_passwordFocusNode);
         }
       },
       controller: _codeController,
-      textInputAction: TextInputAction.next,
+      // textInputAction: TextInputAction.next,
       style: TextStyle(fontSize: 18),
       keyboardType: TextInputType.number,
       textAlign: TextAlign.center,
@@ -234,6 +239,7 @@ class _HomePageState extends State<HomePage> {
       opacity: _showPassword ? 1 : 0.25,
       duration: Duration(milliseconds: 300),
       child: TextField(
+        focusNode: _passwordFocusNode,
         inputFormatters: [LengthLimitingTextInputFormatter(6)],
         onChanged: (value) async {
           if (value.length == 6) {

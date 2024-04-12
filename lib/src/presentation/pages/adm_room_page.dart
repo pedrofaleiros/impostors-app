@@ -7,9 +7,6 @@ import 'package:impostors/src/utils/app_colors.dart';
 import 'package:impostors/src/utils/socket_constants.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-// TODO:
-const url = "http://172.30.4.48:3000";
-
 class User {
   final String id;
   final String username;
@@ -53,7 +50,7 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
   }
 
   void connectToServer() {
-    _socket = IO.io(url, <String, dynamic>{
+    _socket = IO.io(SC.SOCKET_URL, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
