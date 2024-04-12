@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:impostors/src/presentation/pages/create_room_page.dart';
 import 'package:impostors/src/presentation/pages/home_page.dart';
+import 'package:impostors/src/presentation/pages/load_create_room_page.dart';
 import 'package:impostors/src/presentation/pages/load_room_page.dart';
 import 'package:impostors/src/utils/app_colors.dart';
 
@@ -33,6 +35,8 @@ class App extends StatelessWidget {
       routes: {
         HomePage.routeName: (_) => const HomePage(),
         LoadRoomPage.routeName: (_) => const LoadRoomPage(),
+        LoadCreateRoomPage.routeName: (_) => const LoadCreateRoomPage(),
+        CreateRoomPage.routeName: (_) => const CreateRoomPage(),
       },
     );
   }

@@ -17,33 +17,39 @@ class User {
   User({required this.id, required this.username});
 }
 
-class RoomPage extends StatefulWidget {
-  const RoomPage({
+class AdmRoomPage extends StatefulWidget {
+  const AdmRoomPage({
     super.key,
     required this.username,
-    required this.roomCode,
     required this.password,
   });
 
   final String username;
-  final String roomCode;
   final String password;
 
   @override
-  State<RoomPage> createState() => _RoomPageState();
+  State<AdmRoomPage> createState() => _AdmRoomPageState();
 }
 
-class _RoomPageState extends State<RoomPage> {
+class _AdmRoomPageState extends State<AdmRoomPage> {
   late IO.Socket _socket;
 
   List<User> _users = [];
   String? _admId;
   int? _impostors;
+  String? _roomCode;
 
   @override
   void initState() {
     super.initState();
     connectToServer();
+  }
+
+  void _setImpostors(int num) {
+    _socket.emit(SC.SET_IMPOSTORS, {
+      "roomCode": _roomCode,
+      "num": num,
+    });
   }
 
   void connectToServer() {
@@ -55,11 +61,21 @@ class _RoomPageState extends State<RoomPage> {
     _socket.connect();
 
     _socket.onConnect(
-      (data) => _socket.emit(SC.JOIN_ROOM, {
+      (data) => _socket.emit(SC.CREATE_ROOM, {
         'username': widget.username,
-        'roomCode': widget.roomCode,
         'password': widget.password,
       }),
+    );
+
+    _socket.on(
+      SC.ADM_DATA,
+      (data) {
+        try {
+          setState(() {
+            _roomCode = data['roomCode'];
+          });
+        } catch (e) {}
+      },
     );
 
     _socket.on(
@@ -112,7 +128,11 @@ class _RoomPageState extends State<RoomPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sala ${widget.roomCode}"),
+        backgroundColor: AppColors.secondaryLight,
+        foregroundColor: AppColors.gray,
+        centerTitle: true,
+        title:
+            _roomCode == null ? Container() : Text("Sala ${_roomCode ?? ""}"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -133,22 +153,48 @@ class _RoomPageState extends State<RoomPage> {
     );
   }
 
-  Padding _impostorsRow() {
+  Widget _impostorsRow() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 32),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          _removeImpostorButton(),
+          Expanded(child: Container()),
           for (int i = 0; i < (_impostors ?? 1); i++)
             Padding(
-              padding: const EdgeInsets.only(left: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: ImpostorIcon(
                 size: 48,
                 color: AppColors.primary,
               ),
             ),
+          Expanded(child: Container()),
+          _addImpostorButton(),
         ],
       ),
+    );
+  }
+
+  Widget _addImpostorButton() {
+    return IconButton(
+      onPressed: () {
+        if (_impostors != null && _impostors! < 3) {
+          _setImpostors(_impostors! + 1);
+        }
+      },
+      icon: Icon(Icons.add),
+    );
+  }
+
+  Widget _removeImpostorButton() {
+    return IconButton(
+      onPressed: () {
+        if (_impostors != null && _impostors! > 1) {
+          _setImpostors(_impostors! - 1);
+        }
+      },
+      icon: Icon(Icons.remove),
     );
   }
 

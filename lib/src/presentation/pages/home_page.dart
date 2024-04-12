@@ -3,6 +3,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:impostors/src/presentation/pages/create_room_page.dart';
 import 'package:impostors/src/presentation/pages/load_room_page.dart';
 import 'package:impostors/src/presentation/widgets/impostor_icon.dart';
 import 'package:impostors/src/presentation/widgets/show_message_snack_bar.dart';
@@ -24,7 +25,7 @@ class _HomePageState extends State<HomePage> {
 
   bool _showPassword = false;
 
-  Future<void> _enterRoom() async {
+  Future<void> _joinRoom() async {
     // Valida código
     if (_codeController.text.length != 4) {
       showMessageSnackBar(context: context, message: 'Código inválido.');
@@ -42,7 +43,7 @@ class _HomePageState extends State<HomePage> {
 
       FocusScope.of(context).requestFocus(FocusNode());
 
-      final username = _usernameController.text;
+      final username = _usernameController.text.trimRight();
       if (username.length < 2 || username.length > 32) {
         showMessageSnackBar(
           context: context,
@@ -97,15 +98,19 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
       child: Scaffold(
-        appBar: AppBar(),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ListView(
-              children: [
-                _icon(),
-                _card(),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _icon(),
+                  _card(),
+                  SizedBox(height: 8),
+                  _buttonsRow(),
+                ],
+              ),
             ),
           ),
         ),
@@ -113,7 +118,38 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Card _card() {
+  Row _buttonsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        TextButton.icon(
+          onPressed: null,
+          icon: Icon(
+            Icons.phone_iphone,
+            color: AppColors.secondary,
+          ),
+          label: Text(
+            'Jogar localmente',
+            style: TextStyle(color: AppColors.secondary),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: () {
+            Navigator.pushNamed(context, CreateRoomPage.routeName);
+          },
+          icon: Icon(Icons.group_add),
+          label: Text(
+            'Criar uma sala',
+            style: TextStyle(
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _card() {
     return Card(
       elevation: 0,
       child: Padding(
@@ -145,7 +181,7 @@ class _HomePageState extends State<HomePage> {
       width: double.infinity,
       child: CupertinoButton(
         color: AppColors.secondaryDark,
-        onPressed: _codeController.text.length < 4 ? null : _enterRoom,
+        onPressed: _joinRoom,
         child: Text(
           'Entrar',
           style: TextStyle(
@@ -199,10 +235,10 @@ class _HomePageState extends State<HomePage> {
         onChanged: (value) async {
           if (value.length == 6) {
             FocusScope.of(context).requestFocus(FocusNode());
-            // await _enterRoom();
+            // await _joinRoom();
           }
         },
-        onSubmitted: (value) async => await _enterRoom(),
+        onSubmitted: (value) async => await _joinRoom(),
         textInputAction: TextInputAction.done,
         controller: _passwordController,
         style: TextStyle(fontSize: 18),
