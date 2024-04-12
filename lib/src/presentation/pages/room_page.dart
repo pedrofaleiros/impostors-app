@@ -92,6 +92,7 @@ class _RoomPageState extends State<RoomPage> {
                 profession: profession,
                 isImpostor: isImpostor,
               );
+              _show = false;
             });
 
             _pageController.animateToPage(
@@ -156,6 +157,8 @@ class _RoomPageState extends State<RoomPage> {
     );
   }
 
+  bool _show = false;
+
   Widget _gamePage() {
     if (_game == null) {
       return Container();
@@ -166,38 +169,48 @@ class _RoomPageState extends State<RoomPage> {
     return Center(
       child: Card(
         elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: game.isImpostor
-                ? [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 8,
-                      ),
-                      child: ImpostorIcon(size: 64),
-                    ),
-                  ]
-                : [
-                    Text(
-                      "Local:  ${game.place}",
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                    Text(
-                      'Profissão: ${game.profession}',
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    )
-                  ],
-          ),
-        ),
+        child: _show == false
+            ? Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 64, vertical: 16),
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _show = true),
+                  icon: Icon(Icons.remove_red_eye),
+                  label: Text('Ver'),
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: game.isImpostor
+                      ? [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 8,
+                            ),
+                            child: ImpostorIcon(size: 64),
+                          ),
+                        ]
+                      : [
+                          Text(
+                            "Local:  ${game.place}",
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                          Text(
+                            'Profissão: ${game.profession}',
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          )
+                        ],
+                ),
+              ),
       ),
     );
   }

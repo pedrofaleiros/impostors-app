@@ -240,7 +240,7 @@ class _HomePageState extends State<HomePage> {
       onChanged: (value) async {
         if (value.length == 6) {
           FocusScope.of(context).requestFocus(FocusNode());
-          // await _joinRoom();
+          await _joinRoom();
         }
       },
       onSubmitted: (value) async => await _joinRoom(),
