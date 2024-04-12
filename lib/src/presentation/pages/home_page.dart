@@ -118,34 +118,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Row _buttonsRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        TextButton.icon(
-          onPressed: null,
-          icon: Icon(
-            Icons.phone_iphone,
-            color: AppColors.secondary,
-          ),
-          label: Text(
-            'Jogar localmente',
-            style: TextStyle(color: AppColors.secondary),
-          ),
-        ),
-        TextButton.icon(
-          onPressed: () {
-            Navigator.pushNamed(context, CreateRoomPage.routeName);
-          },
-          icon: Icon(Icons.group_add),
-          label: Text(
-            'Criar uma sala',
-            style: TextStyle(
-              color: AppColors.primary,
+  Widget _buttonsRow() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          TextButton.icon(
+            onPressed: null,
+            icon: Icon(
+              Icons.phone_iphone,
+              color: AppColors.secondary,
+            ),
+            label: Text(
+              'Jogar localmente',
+              style: TextStyle(color: AppColors.secondary),
             ),
           ),
-        ),
-      ],
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(context, CreateRoomPage.routeName);
+            },
+            icon: Icon(Icons.group_add),
+            label: Text(
+              'Criar uma sala',
+              style: TextStyle(
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
