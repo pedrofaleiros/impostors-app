@@ -1,14 +1,13 @@
-// ignore_for_file: avoid_print, prefer_const_constructors
+// ignore_for_file: avoid_print, prefer_const_constructors, library_prefixes, constant_identifier_names
 
 import 'package:flutter/material.dart';
 import 'package:impostors/src/presentation/widgets/impostor_icon.dart';
 import 'package:impostors/src/presentation/widgets/show_message_snack_bar.dart';
 import 'package:impostors/src/utils/app_colors.dart';
+import 'package:impostors/src/utils/socket_constants.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-// const url =
-//     "https://3000-pedrofaleir-impostorsba-jrzwegb9xw9.ws-us110.gitpod.io";
-
+// TODO:
 const url = "http://172.30.4.48:3000";
 
 class User {
@@ -38,7 +37,7 @@ class _RoomPageState extends State<RoomPage> {
   late IO.Socket _socket;
 
   List<User> _users = [];
-  String? _adm;
+  String? _admId;
   int? _impostors;
 
   @override
@@ -55,29 +54,28 @@ class _RoomPageState extends State<RoomPage> {
 
     _socket.connect();
 
-    _socket.onConnect((data) => _handleJoinRoom());
-
-    _handleOnMessage();
+    _socket.onConnect(
+      (data) => _socket.emit(SC.JOIN_ROOM, {
+        'username': widget.username,
+        'roomCode': widget.roomCode,
+        'password': widget.password,
+      }),
+    );
 
     _socket.on(
-      'roomData',
+      SC.ROOM_DATA,
       (data) {
         try {
-          print(data['adm']);
-          print(data['impostors']);
-
           setState(() {
-            _adm = data['adm'];
+            _admId = data['admId'];
             _impostors = data['impostors'];
           });
-        } catch (e) {
-          print('erro roomData ${e.toString()}');
-        }
+        } catch (e) {}
       },
     );
 
     _socket.on(
-      'roomPlayers',
+      SC.ROOM_PLAYERS,
       (data) {
         try {
           final dataList = data['players'] as List<dynamic>;
@@ -95,7 +93,7 @@ class _RoomPageState extends State<RoomPage> {
     );
 
     _socket.on(
-      'error',
+      SC.ERROR,
       (data) {
         showMessageSnackBar(
           context: context,
@@ -103,18 +101,6 @@ class _RoomPageState extends State<RoomPage> {
         ).then((value) => Navigator.pop(context));
       },
     );
-  }
-
-  void _handleJoinRoom() {
-    return _socket.emit('joinRoom', {
-      'username': widget.username,
-      'roomCode': widget.roomCode,
-      'password': widget.password,
-    });
-  }
-
-  void _handleOnMessage() {
-    return _socket.on("message", (message) {});
   }
 
   @override
@@ -171,7 +157,7 @@ class _RoomPageState extends State<RoomPage> {
   Iterable<Widget> _usersMap() {
     return _users.map(
       (e) {
-        final isAdm = _adm != null && e.id == _adm;
+        final isAdm = _admId != null && e.id == _admId;
         final isYou = widget.username == e.username;
 
         return SizedBox(

@@ -2,6 +2,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:impostors/src/presentation/pages/load_room_page.dart';
 import 'package:impostors/src/presentation/widgets/impostor_icon.dart';
 import 'package:impostors/src/presentation/widgets/show_message_snack_bar.dart';
@@ -24,38 +25,45 @@ class _HomePageState extends State<HomePage> {
   bool _showPassword = false;
 
   Future<void> _enterRoom() async {
+    // Valida código
     if (_codeController.text.length != 4) {
       showMessageSnackBar(context: context, message: 'Código inválido.');
       return;
     }
+    // Valida senha
     if (_passwordController.text.length != 6) {
       showMessageSnackBar(context: context, message: 'Senha inválida.');
       return;
     }
 
-    await _showDialog().then((username) {
-      if (username != null) {
-        if (username.length < 2 || username.length > 32) {
-          showMessageSnackBar(
-            context: context,
-            message: 'Nome de usuário inválido.',
-          );
-          return;
-        }
-        Navigator.pushNamed(
-          context,
-          LoadRoomPage.routeName,
-          arguments: {
-            "username": username,
-            "roomCode": _codeController.text,
-            "password": _passwordController.text,
-          },
+    // Dialog nome de usuario
+    await _showDialog().then((pressed) {
+      if (pressed == null || !pressed) return;
+
+      FocusScope.of(context).requestFocus(FocusNode());
+
+      final username = _usernameController.text;
+      if (username.length < 2 || username.length > 32) {
+        showMessageSnackBar(
+          context: context,
+          message: 'Nome de usuário inválido.',
         );
+        return;
       }
+
+      Navigator.pushNamed(
+        context,
+        LoadRoomPage.routeName,
+        arguments: {
+          "username": username,
+          "roomCode": _codeController.text,
+          "password": _passwordController.text,
+        },
+      );
     });
   }
 
-  Future<String?> _showDialog() async {
+  Future<bool?> _showDialog() async {
     return await showDialog(
       context: context,
       builder: (context) {
@@ -66,11 +74,11 @@ class _HomePageState extends State<HomePage> {
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, null),
+              onPressed: () => Navigator.pop(context),
               child: Text('Cancelar'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, _usernameController.text),
+              onPressed: () => Navigator.pop(context, true),
               child: Text(
                 'Entrar',
                 style: TextStyle(
@@ -87,9 +95,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).requestFocus(FocusNode());
-      },
+      onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
       child: Scaffold(
         appBar: AppBar(),
         body: SafeArea(
@@ -107,13 +113,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _icon() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: ImpostorIcon(size: 96),
-    );
-  }
-
   Card _card() {
     return Card(
       elevation: 0,
@@ -122,10 +121,10 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Text(
-              'Entre em uma sala',
+              'Entrar em uma sala',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.white,
               ),
             ),
@@ -146,6 +145,7 @@ class _HomePageState extends State<HomePage> {
       width: double.infinity,
       child: CupertinoButton(
         color: AppColors.secondaryDark,
+        onPressed: _codeController.text.length < 4 ? null : _enterRoom,
         child: Text(
           'Entrar',
           style: TextStyle(
@@ -153,13 +153,13 @@ class _HomePageState extends State<HomePage> {
             color: AppColors.white,
           ),
         ),
-        onPressed: _enterRoom,
       ),
     );
   }
 
   Widget _codeTextField() {
     return TextField(
+      inputFormatters: [LengthLimitingTextInputFormatter(4)],
       onChanged: (value) {
         if (value.length == 4) {
           setState(() => _showPassword = true);
@@ -195,6 +195,13 @@ class _HomePageState extends State<HomePage> {
       opacity: _showPassword ? 1 : 0.25,
       duration: Duration(milliseconds: 300),
       child: TextField(
+        inputFormatters: [LengthLimitingTextInputFormatter(6)],
+        onChanged: (value) async {
+          if (value.length == 6) {
+            FocusScope.of(context).requestFocus(FocusNode());
+            // await _enterRoom();
+          }
+        },
         onSubmitted: (value) async => await _enterRoom(),
         textInputAction: TextInputAction.done,
         controller: _passwordController,
@@ -231,6 +238,13 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(8),
         ),
       ),
+    );
+  }
+
+  Widget _icon() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: ImpostorIcon(size: 96),
     );
   }
 }
