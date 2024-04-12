@@ -1,6 +1,8 @@
 // ignore_for_file: avoid_print, prefer_const_constructors, library_prefixes, constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:impostors/src/model/game_model.dart';
 import 'package:impostors/src/presentation/widgets/impostor_icon.dart';
 import 'package:impostors/src/presentation/widgets/show_message_snack_bar.dart';
 import 'package:impostors/src/utils/app_colors.dart';
@@ -33,9 +35,13 @@ class RoomPage extends StatefulWidget {
 class _RoomPageState extends State<RoomPage> {
   late IO.Socket _socket;
 
+  final _pageController = PageController();
+
   List<User> _users = [];
   String? _admId;
   int? _impostors;
+
+  GameModel? _game;
 
   @override
   void initState() {
@@ -67,6 +73,33 @@ class _RoomPageState extends State<RoomPage> {
             _admId = data['admId'];
             _impostors = data['impostors'];
           });
+        } catch (e) {}
+      },
+    );
+
+    _socket.on(
+      SC.START_GAME,
+      (data) {
+        try {
+          final isImpostor = data['isImpostor'] as bool?;
+          final profession = data['profession'] as String?;
+          final place = data['place'] as String?;
+
+          if (place != null && profession != null && isImpostor != null) {
+            setState(() {
+              _game = GameModel(
+                place: place,
+                profession: profession,
+                isImpostor: isImpostor,
+              );
+            });
+
+            _pageController.animateToPage(
+              1,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
         } catch (e) {}
       },
     );
@@ -111,20 +144,78 @@ class _RoomPageState extends State<RoomPage> {
       appBar: AppBar(
         title: Text("Sala ${widget.roomCode}"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
+      body: PageView(
+        physics: NeverScrollableScrollPhysics(),
+        controller: _pageController,
+        scrollDirection: Axis.horizontal,
+        children: [
+          _firstPage(),
+          _gamePage(),
+        ],
+      ),
+    );
+  }
+
+  Widget _gamePage() {
+    if (_game == null) {
+      return Container();
+    }
+
+    final game = _game!;
+
+    return Center(
+      child: Card(
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                children: [
-                  ..._usersMap(),
-                ],
-              ),
-              _impostorsRow(),
-            ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: game.isImpostor
+                ? [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 8,
+                      ),
+                      child: ImpostorIcon(size: 64),
+                    ),
+                  ]
+                : [
+                    Text(
+                      "Local:  ${game.place}",
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+                    Text(
+                      'Profissão: ${game.profession}',
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    )
+                  ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _firstPage() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SingleChildScrollView(
+        child: Column(
+          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              children: [
+                ..._usersMap(),
+              ],
+            ),
+            _impostorsRow(),
+          ],
         ),
       ),
     );

@@ -104,6 +104,25 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
     );
 
     _socket.on(
+      SC.START_GAME,
+      (data) {
+        try {
+          //{
+          //  id: thisSocket.id,
+          //  username: prof.username,
+          //  profession: prof.profession,
+          //  isImpostor: prof.isImpostor,
+          //  place: prof.isImpostor ? "???" : gamePlace.name,
+          //}
+
+          print(data['isImpostor']);
+          print(data['profession']);
+          print(data['place']);
+        } catch (e) {}
+      },
+    );
+
+    _socket.on(
       SC.ERROR,
       (data) {
         showMessageSnackBar(
