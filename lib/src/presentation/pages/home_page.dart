@@ -211,7 +211,6 @@ class _HomePageState extends State<HomePage> {
         }
       },
       controller: _codeController,
-      // textInputAction: TextInputAction.next,
       style: TextStyle(fontSize: 18),
       keyboardType: TextInputType.number,
       textAlign: TextAlign.center,
@@ -235,38 +234,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _passwordTextField() {
-    return AnimatedOpacity(
-      opacity: _showPassword ? 1 : 0.25,
-      duration: Duration(milliseconds: 300),
-      child: TextField(
-        focusNode: _passwordFocusNode,
-        inputFormatters: [LengthLimitingTextInputFormatter(6)],
-        onChanged: (value) async {
-          if (value.length == 6) {
-            FocusScope.of(context).requestFocus(FocusNode());
-            // await _joinRoom();
-          }
-        },
-        onSubmitted: (value) async => await _joinRoom(),
-        textInputAction: TextInputAction.done,
-        controller: _passwordController,
-        style: TextStyle(fontSize: 18),
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          prefixIcon: Icon(Icons.lock_outline),
-          suffixIcon: Icon(Icons.lock_outline, color: Colors.transparent),
-          hintText: 'Senha',
-          contentPadding: EdgeInsets.all(12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
-              color: AppColors.white,
-              width: 2,
-            ),
+    return TextField(
+      focusNode: _passwordFocusNode,
+      inputFormatters: [LengthLimitingTextInputFormatter(6)],
+      onChanged: (value) async {
+        if (value.length == 6) {
+          FocusScope.of(context).requestFocus(FocusNode());
+          // await _joinRoom();
+        }
+      },
+      onSubmitted: (value) async => await _joinRoom(),
+      textInputAction: TextInputAction.done,
+      controller: _passwordController,
+      style: TextStyle(fontSize: 18),
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        prefixIcon: Icon(Icons.lock_outline),
+        suffixIcon: Icon(Icons.lock_outline, color: Colors.transparent),
+        hintText: 'Senha',
+        contentPadding: EdgeInsets.all(12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: AppColors.white,
+            width: 2,
           ),
         ),
       ),
