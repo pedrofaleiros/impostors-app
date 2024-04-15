@@ -1,7 +1,9 @@
 // ignore_for_file: avoid_print, prefer_const_constructors, library_prefixes, constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:impostors/src/model/game_model.dart';
+import 'package:impostors/src/model/player_profession_model.dart';
 import 'package:impostors/src/presentation/widgets/impostor_icon.dart';
 import 'package:impostors/src/presentation/widgets/show_message_snack_bar.dart';
 import 'package:impostors/src/utils/app_colors.dart';
@@ -39,6 +41,11 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
   int? _impostors;
   String? _roomCode;
 
+  String? place;
+  List<PlayerProfessionModel>? professions;
+
+  String countDown = "";
+
   GameModel? _game;
 
   @override
@@ -56,6 +63,10 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
 
   void _startGame() {
     _socket.emit(SC.START_GAME, {});
+  }
+
+  void _finishGame() {
+    _socket.emit(SC.FINISH_GAME, {});
   }
 
   void connectToServer() {
@@ -127,7 +138,8 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
                 profession: profession,
                 isImpostor: isImpostor,
               );
-              _show = false;
+              this.place = null;
+              professions = null;
             });
 
             _pageController.animateToPage(
@@ -136,6 +148,36 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
               curve: Curves.easeInOut,
             );
           }
+        } catch (e) {}
+      },
+    );
+
+    _socket.on(
+      SC.FINISH_GAME,
+      (data) {
+        try {
+          final professionsList = data['professions'] as List<dynamic>;
+          final list = <PlayerProfessionModel>[];
+
+          for (var el in professionsList) {
+            list.add(PlayerProfessionModel(
+              playerId: el['playerId'],
+              username: el['username'],
+              profession: el['profession'],
+              isImpostor: el['isImpostor'],
+            ));
+          }
+
+          setState(() {
+            professions = list;
+            place = data['place'];
+          });
+
+          _pageController.animateToPage(
+            2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         } catch (e) {}
       },
     );
@@ -159,6 +201,12 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
         ).then((value) => Navigator.pop(context));
       },
     );
+
+    _socket.on('count', (data) {
+      try {
+        setState(() => countDown = data);
+      } catch (e) {}
+    });
   }
 
   @override
@@ -176,8 +224,10 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
           if (_game != null)
             //TODO: tirar
             IconButton(
-              onPressed: _startGame,
-              icon: Icon(Icons.replay_outlined),
+              onPressed: _finishGame,
+              icon: Icon(
+                Icons.done,
+              ),
             ),
         ],
         backgroundColor: AppColors.secondaryLight,
@@ -193,8 +243,61 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
         children: [
           _firstPage(),
           _gamePage(),
+          _showPage(),
         ],
       ),
+    );
+  }
+
+  Widget _showPage() {
+    if (professions == null || place == null) {
+      return Container();
+    }
+
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Center(
+            child: Text(
+              place!,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        ...professions!.map(
+          (e) {
+            return Card(
+              elevation: 0,
+              margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: ListTile(
+                textColor: e.isImpostor
+                    ? AppColors.primaryLight
+                    : AppColors.secondaryLight,
+                title: Text(e.username),
+                trailing: e.isImpostor
+                    ? ImpostorIcon()
+                    : Text(
+                        e.profession ?? "",
+                      ),
+              ),
+            );
+          },
+        ),
+        TextButton(
+          onPressed: () {
+            _pageController.animateToPage(
+              0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          },
+          child: Text('Voltar para a sala'),
+        )
+      ],
     );
   }
 
@@ -215,13 +318,15 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
               onPressed: _startGame,
               child: Text('Começar partida'),
             ),
+            Padding(
+              padding: const EdgeInsets.only(top: 32),
+              child: Text(countDown),
+            ),
           ],
         ),
       ),
     );
   }
-
-  bool _show = false;
 
   Widget _gamePage() {
     if (_game == null) {
@@ -231,50 +336,38 @@ class _AdmRoomPageState extends State<AdmRoomPage> {
     final game = _game!;
 
     return Center(
-      child: Card(
-        elevation: 0,
-        child: _show == false
-            ? Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 64, vertical: 32),
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _show = true),
-                  icon: Icon(Icons.remove_red_eye),
-                  label: Text('Ver'),
-                ),
-              )
-            : Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: game.isImpostor
-                      ? [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 8,
-                            ),
-                            child: ImpostorIcon(size: 64),
-                          ),
-                        ]
-                      : [
-                          Text(
-                            "Local:  ${game.place}",
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                          Text(
-                            'Profissão: ${game.profession}',
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          )
-                        ],
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (game.isImpostor)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 8,
               ),
+              child: ImpostorIcon(size: 64),
+            ),
+          if (!game.isImpostor)
+            Text(
+              "Local:  ${game.place}",
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+          if (!game.isImpostor)
+            Text(
+              'Profissão: ${game.profession}',
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(top: 32),
+            child: Text(countDown),
+          ),
+        ],
       ),
     );
   }

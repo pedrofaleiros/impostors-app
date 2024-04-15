@@ -15,8 +15,9 @@ class SC {
   static const ERROR = "error";
   static const MSG = "message";
 
-  // static const SOCKET_URL = "http://172.30.4.48:3000";
-  static const SOCKET_URL = "http://192.168.0.129:3000";
+  static const SOCKET_URL = "http://172.30.4.48:3000";
+  // static const SOCKET_URL = "http://192.168.0.129:3000";
 
   static const START_GAME = "startGame";
+  static const FINISH_GAME = "finishGame";
 }
